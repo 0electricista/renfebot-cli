@@ -1,4 +1,4 @@
-# renfe-bot
+# 🚄 renfebot-cli
 
 
 ## Descripción
@@ -8,10 +8,9 @@ billetes de tren de Renfe, el principal operador ferroviario de España. El bot
 monitorea la disponibilidad de billetes, especialmente en situaciones en las que
 están agotados y solo se vuelven a estar disponibles cuando alguien cancela su
 reserva. Notifica rápidamente a los usuarios cuando hay billetes disponibles
-para comprar. El bot ahora admite una interfaz de chatbot de Telegram para una
-interacción mejorada con el usuario.
+para comprar. 
 
-Este fork de Renfe-bot implementa una nueva CLI que se conecta directamente con un bot de Telegram, además
+Este fork de Renfe-bot implementa una nueva CLI que se conecta directamente con un bot de Telegram, además,
 implementa notificaciones en Windows mediante ```win11toast```. Por último, este fork permite guardar
 **estaciones favoritas**, para agilizar los procesos de búsqueda.
 
@@ -19,19 +18,10 @@ implementa notificaciones en Windows mediante ```win11toast```. Por último, est
 
 ## Como utilizar el bot
 
-### Opción A: Correrlo normalmente en tu ordenador
 
-#### Requisitos
 
-Las dependencias requeridas para ejecutar este proyecto están incluidas en el
-archivo `requirements.txt`. Para instalar los requisitos, usa el siguiente
-comando:
 
-```bash
-pip install -r requirements.txt
-```
-
-#### Instalación
+#### 📦 Instalación
 
 Sigue los siguientes pasos para instalar y configurar el Renfe-bot:
 
@@ -44,20 +34,29 @@ Sigue los siguientes pasos para instalar y configurar el Renfe-bot:
 5. Cualquier dato requerido, como la clave API, se solicitará cuando ejecutes el
    bot por primera vez.
 6. Las estaciones favoritas se guardan. Si quieres borrarla, ve al archivo estaciones.txt y borra el nombre de las estaciones. No dejes un vacío.
-7. NO INTRODUZCAS ESTACIONES NUEVAS (a no ser que sepas el nombre exacto de la estación o lo hayas mirado en stations.json)
-8. Disfrutalo.
+7. Disfrutalo.
 
-#### Creación bot de Telegram
+#### 📂 Requisitos
+
+Las dependencias requeridas para ejecutar este proyecto están incluidas en el
+archivo `requirements.txt`. Para instalar los requisitos, usa el siguiente
+comando:
+
+```bash
+pip install -r requirements.txt
+```
+
+#### 🤖 Creación bot de Telegram (opcional)
 1. Necesitas una cuenta de Telegram
 2. Entra aquí y sigue las instrucciones: https://telegram.me/BotFather. Asegúrate de copiar el token.
 3. Luego entra aquí: ```https://api.telegram.org/bot{pega_aqui_tu_token_y_quita_las_llaves}/getUpdates``` pegando tu token donde pone que lo pongas
 4. Envíale un mensaje a tu bot en Telegram, y vuelve a la página de antes (api.telegram...).
-5. Verás algo parecido a "message":{"message_id":X,"from":{"id":NUMEROSDEID..."
-6. Copia el número (sin comillas) que aparezca en id (NUMEROSDEID), y ese es el CHAT_ID
+5. Verás algo parecido a ```"message":{"message_id":X,"from":{"id":NUMEROSDEID..."```
+6. Copia el número (sin comillas) que aparezca en id ```(NUMEROSDEID)```, y ese es el CHAT_ID
 
 
 
-## Uso
+## ⌨️ Uso
 
 Para usar el necesitarás ejecutar `python repeat.py`. Necesitarás
 proporcionar datos como las estaciones de origen y destino, y las fechas. El bot
