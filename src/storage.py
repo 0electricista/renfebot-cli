@@ -7,8 +7,8 @@ from typing import Any, Dict, List, Iterable, Optional
 
 from thefuzz import process
 
-from errors import StationNotFound
-from models import StationRecord
+from .errors import StationNotFound
+from .models import StationRecord
 
 STATIONS_PATH = Path("assets/stations.json")
 

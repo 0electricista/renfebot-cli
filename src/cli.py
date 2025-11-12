@@ -7,8 +7,8 @@ from rich.box import HEAVY
 from rich.console import Console
 from rich.table import Table
 
-from scraper import Scraper
-from validators import validate_station, validate_date
+from .scraper import Scraper
+from .validators import validate_station, validate_date
 
 
 def main(origin: str, destination: str, departure_date: str, from_time: str = None,console=None):

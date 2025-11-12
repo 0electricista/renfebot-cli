@@ -10,8 +10,8 @@ import urllib.parse
 import json5
 import requests
 
-from errors import InvalidDWRToken, InvalidTrainRideFilter
-from models import StationRecord, TrainRideRecord
+from .errors import InvalidDWRToken, InvalidTrainRideFilter
+from .models import StationRecord, TrainRideRecord
 
 SEARCH_URL = "https://venta.renfe.com/vol/buscarTren.do?Idioma=es&Pais=ES"
 

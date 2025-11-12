@@ -25,13 +25,13 @@ implementa notificaciones en Windows mediante ```win11toast```. Por último, est
 
 Sigue los siguientes pasos para instalar y configurar el Renfe-bot:
 
-1. Asegúrate de tener Python con versión >= 3.12, si no instálalo desde Google
-2. Descarga a partir de releases o clona este repositorio en tu máquina local.
+1. Asegúrate de tener [Python](https://www.python.org/downloads/) con versión >= 3.12, si no instálalo desde Google
+2. Descargalo [aquí](https://github.com/0electricista/renfebot-cli/archive/refs/tags/v1.0.zip) o clona este repositorio en tu máquina local.
 3. Instala las dependencias requeridas utilizando el comando mencionado en la
    sección 'Requisitos'.
-4. Ejecuta el bot ejecutándolo (`python repeat.py`) en el directorio raíz
+4. Ejecuta el bot con el comando (`python repeat.py`) en el directorio raíz usando el **terminal** (cmd, powershell, bash).
    del proyecto.
-5. Cualquier dato requerido, como la clave API, se solicitará cuando ejecutes el
+5. Cualquier dato requerido, como la clave API del bot de Telegram (opcional), se solicitará cuando ejecutes el
    bot por primera vez.
 6. Las estaciones favoritas se guardan. Si quieres borrarla, ve al archivo estaciones.txt y borra el nombre de las estaciones. No dejes un vacío.
 7. Disfrutalo.

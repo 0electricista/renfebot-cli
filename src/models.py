@@ -5,7 +5,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
-from errors import InvalidTrainRideFilter
+from .errors import InvalidTrainRideFilter
 
 class StationRecord(BaseModel):
     """Represents a Station, using Renfe's data definition. It can be seen at the file

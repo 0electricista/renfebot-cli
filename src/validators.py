@@ -6,10 +6,10 @@ from typing import Optional
 
 import dateparser
 
-from errors import StationNotFound
-from messages import user_messages as msg
-from models import StationRecord
-from storage import StationsStorage
+from .errors import StationNotFound
+from .messages import user_messages as msg
+from .models import StationRecord
+from .storage import StationsStorage
 
 
 @dataclass

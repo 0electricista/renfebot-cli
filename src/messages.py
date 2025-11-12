@@ -2,7 +2,7 @@
 
 from typing import List
 
-from models import TrainRideRecord, StationRecord
+from .models import TrainRideRecord, StationRecord
 
 user_messages = {
     "welcome": "Hola {}. Bienvenido a tu bot de Renfe. Te ayudaré a encontrar billetes de tren para tus viajes. Para empezar, escribe /ayuda para ver los comandos disponibles.",
