@@ -115,8 +115,8 @@ with st.sidebar:
         
         c1, c2 = st.columns(2)
         if c1.button("💾 Guardar token"):
-            cookie_manager.set("tg_token", tg_token, expires_at=datetime.now() + timedelta(days=30), key="set_token")
-            cookie_manager.set("tg_chat_id", tg_chat_id, expires_at=datetime.now() + timedelta(days=30), key="set_chat")
+            cookie_manager.set("tg_token", tg_token, expires_at=datetime.now() + timedelta(days=3650), key="set_token")
+            cookie_manager.set("tg_chat_id", tg_chat_id, expires_at=datetime.now() + timedelta(days=3650), key="set_chat")
             st.success("Guardado.")
             time.sleep(1)
             st.rerun()
@@ -259,3 +259,4 @@ if st.session_state.get('searching'):
         time.sleep(refresh_rate)
 
         st.rerun()
+
