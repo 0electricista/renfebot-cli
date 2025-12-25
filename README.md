@@ -1,98 +1,91 @@
-# 🚄 renfebot-cli
+# 🚄 Renfe Web Monitor
 
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://renfebot-cli-sibhhpyqlc4usxohargudb.streamlit.app/)
+[![Python](https://img.shields.io/badge/Python-3.12%2B-blue)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## Descripción
+**La forma más fácil de encontrar billetes de tren.** Olvídate de refrescar la página de Renfe constantemente. Este monitor busca por ti y te avisa visualmente cuando alguien libera un asiento. 
 
-Renfe-bot es un bot diseñado para ayudar a los usuarios a comprar
-billetes de tren de Renfe, el principal operador ferroviario de España. El bot
-monitorea la disponibilidad de billetes, especialmente en situaciones en las que
-están agotados y solo se vuelven a estar disponibles cuando alguien cancela su
-reserva. Notifica rápidamente a los usuarios cuando hay billetes disponibles
-para comprar. 
+---
 
-Este fork de Renfe-bot proporciona una versión web que tiene integración con Telegram y con las notificaciones del navegador.
-Se despliega usando ```Streamlit``` y es accesible desde [aquí](https://renfebot-cli-sibhhpyqlc4usxohargudb.streamlit.app/)
+## 🚀 Empezar ahora
 
-Si no, tambien implementa una nueva CLI que se conecta directamente con Telegram, además,
-implementa notificaciones en Windows mediante ```win11toast```. Por último, este fork permite guardar
-**estaciones favoritas** en la opción CLI, para agilizar los procesos de búsqueda.
+No necesitas instalar nada en tu ordenador. Usa la versión web accesible desde cualquier navegador:
 
+> **[👉 HAZ CLICK AQUÍ PARA ABRIR EL MONITOR WEB](https://renfebot-cli-sibhhpyqlc4usxohargudb.streamlit.app/)**
 
+### ¿Cómo funciona?
+1. **Entra al enlace** de arriba.
+2. Selecciona tu **Origen**, **Destino** y la **Fecha** del viaje.
+3. Deja la pestaña abierta mientras haces otras cosas. El sistema se actualizará solo.
 
-## Como utilizar el bot
+---
 
+## ✨ Características Principales
 
+* **🖥️ Interfaz Visual (Web):** Olvídate de comandos complicados. Una interfaz gráfica limpia y fácil de usar con `Streamlit`.
+* **🔔 Notificaciones Nativas (Windows):** Si usas la versión de escritorio, recibirás avisos directamente en el centro de notificaciones de Windows 10/11 (vía `win11toast`).
+* **⚡ Búsqueda Rápida:** Filtra trenes por hora de salida.
+* **📱 Telegram (Opcional):** Posibilidad de integración con bots de Telegram para recibir alertas en el móvil.
 
+---
 
-#### 📦 Instalación
+## 💻 Ejecución en local
 
-Sigue los siguientes pasos para instalar y configurar el Renfe-bot en tu equipo (usando la CLI):
+Si prefieres ejecutar el programa en tu propio ordenador para tener **notificaciones nativas de Windows** o mayor control, sigue estos pasos:
 
-1. Asegúrate de tener [Python](https://www.python.org/downloads/) con versión >= 3.12, si no instálalo desde Google
-2. Descargalo [aquí](https://github.com/0electricista/renfebot-cli/archive/refs/tags/v1.1.zip) o clona este repositorio en tu máquina local.
-3. Instala las dependencias requeridas utilizando el comando mencionado en la
-   sección 'Requisitos'.
-4. Ejecuta el bot con el comando (`python repeat.py`) en el directorio raíz usando el **terminal** (cmd, powershell, bash).
-   del proyecto.
-5. Cualquier dato requerido, como la clave API del bot de Telegram (opcional), se solicitará cuando ejecutes el
-   bot por primera vez.
-6. Las estaciones favoritas se guardan. Si quieres borrarla, ve al archivo estaciones.txt y borra el nombre de las estaciones. No dejes un vacío.
-7. Disfrutalo.
-8. OPCIONAL: si decides correr la versión de Streamlit en tu ordenador, ejecuta en el terminal ```streamlit run app.py``` y se abrirá la versión web en local.
-#### 📂 Requisitos
+### Requisitos Previos
+* Tener [Python 3.12](https://www.python.org/downloads/) o superior instalado.
 
-Las dependencias requeridas para ejecutar este proyecto están incluidas en el
-archivo `requirements.txt`. Para instalar los requisitos, usa el siguiente
-comando:
+### Instalación
+
+1. Descarga el código fuente: [Descargar ZIP](https://github.com/0electricista/renfebot-cli/archive/refs/tags/v1.1.zip) y descomprímelo.
+2. Abre una terminal en la carpeta descargada e instala las dependencias:
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+### Modos de Uso Local
+
+**Opción A: Interfaz Gráfica**  
+Ejecuta este comando para abrir la versión web en tu propio PC:
 
 ```bash
-pip install -r requirements.txt
+streamlit run app.py
 ```
 
-#### 🤖 Creación bot de Telegram (opcional)
-1. Necesitas una cuenta de Telegram
-2. Entra aquí y sigue las instrucciones: https://telegram.me/BotFather. Asegúrate de copiar el token.
-3. Luego entra aquí: ```https://api.telegram.org/bot{pega_aqui_tu_token_y_quita_las_llaves}/getUpdates``` pegando tu token donde pone que lo pongas
-4. Envíale un mensaje a tu bot en Telegram, y vuelve a la página de antes (api.telegram...).
-5. Verás algo parecido a ```"message":{"message_id":X,"from":{"id":NUMEROSDEID..."```
-6. Copia el número (sin comillas) que aparezca en id ```(NUMEROSDEID)```, y ese es el CHAT_ID
+**Opción B: Monitor de Fondo (Windows)**  
+Si quieres dejarlo corriendo en segundo plano buscando billetes repetidamente y que te avise con una notificación de Windows:
 
+```bash
+python repeat.py
+```
 
+*La primera vez te pedirá los datos de búsqueda y guardará tus estaciones favoritas.*
 
-## ⌨️ Uso
+---
 
-Para usar el necesitarás ejecutar `python repeat.py`. Necesitarás
-proporcionar datos como las estaciones de origen y destino, y las fechas. El bot
-monitoreará la disponibilidad de billetes y te notificará inmediatamente cuando
-haya un billete disponible para tu viaje a partir de Telegram o con una notificación en Windows.
+## 🛠️ Para Desarrolladores (CLI)
 
-## Contribuciones
+Este proyecto mantiene la compatibilidad con la CLI original para su uso en scripts o servidores.
 
-Este proyecto es de código abierto y las contribuciones son muy bienvenidas. Si
-deseas contribuir al proyecto, por favor sigue estos pasos:
+```bash
+# Búsqueda puntual
+python src/cli.py -o Madrid -d Barcelona --departure_date 01/01/2025
+```
 
-1. Haz un fork del repositorio.
-2. Crea una nueva rama para tus cambios.
-3. Realiza tus cambios.
-4. Envía tus cambios a tu fork.
-5. Envía una pull request con una descripción de los cambios.
+**Argumentos extra disponibles:**
 
-Antes de fusionar, todos los cambios serán probados para asegurar que funcionan
-correctamente. Las contribuciones no se limitan a cambios de código; abrir
-problemas o proporcionar sugerencias son igualmente valiosos.
+* `--from_time HH:MM`: Filtra los resultados para mostrar solo trenes que salen después de una hora específica.
 
-## Licencia
+---
 
-Este proyecto está licenciado bajo los términos de la [Licencia
-MIT](https://opensource.org/license/mit/).
+## 📄 Créditos y Licencia
 
-La Licencia MIT es una licencia permisiva que permite la reutilización de
-software dentro del software propietario siempre que todas las copias del
-software licenciado incluyan una copia de los términos de la Licencia MIT y el
-aviso de derechos de autor.
+Este proyecto es un fork de **Renfe-bot**.
 
-Esto significa que eres libre de usar, copiar, modificar, fusionar, publicar,
-distribuir, sublicenciar y/o vender copias del software, siempre que incluyas la
-atribución necesaria y proporciona una copia de la licencia MIT.
+* **Core & Scraping:** [emartinez-dev](https://github.com/emartinez-dev) (Lógica original de scraping y estructura base).
+* **Web UI & Windows Notifications:** [0electricista](https://github.com/0electricista) (Implementación de Streamlit, Win11Toast y mejoras visuales).
 
-Puedes ver el texto completo de la licencia en el archivo LICENSE.
+Este proyecto está bajo la **Licencia MIT**. Eres libre de usarlo, modificarlo y compartirlo.

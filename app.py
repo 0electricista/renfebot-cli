@@ -16,7 +16,7 @@ except ImportError as e:
     st.error(f"Error crítico: {e}. Revisa requirements.txt.")
     st.stop()
 
-st.set_page_config(page_title="RenfeBot Web", page_icon="🚆", layout="wide")
+st.set_page_config(page_title="Renfe Web Monitor", page_icon="🚆", layout="wide")
 
 # --- 0. PARCHE CSS (SOLUCIÓN ESPACIADO) ---
 # Esto reduce el padding de los botones en la sidebar para que el emoji '?' no tenga espacios raros
@@ -165,12 +165,12 @@ with st.sidebar:
         st.rerun()
 
 # --- 5. LÓGICA PRINCIPAL ---
-st.title("🚆 RenfeBot Web")
+st.title("🚆 Renfe Web Monitor")
 
 if not st.session_state.get('searching'):
-    with st.expander("ℹ️ ¿Qué es RenfeBot?", expanded=True):
+    with st.expander("ℹ️ ¿Qué es Renfe Web Monitor?", expanded=True):
         st.markdown("""
-        **Renfe-bot** es un bot diseñado para ayudar a los usuarios a comprar billetes de tren de Renfe. 
+        **Renfe Web Monitor** es un bot diseñado para ayudar a los usuarios a comprar billetes de tren de Renfe. 
         
         Su función principal es **monitorear la disponibilidad de billetes**, especialmente útil cuando están agotados. 
         El sistema detecta automáticamente cuando alguien cancela una reserva y el billete vuelve a estar disponible, 
