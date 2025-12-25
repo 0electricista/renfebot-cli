@@ -26,5 +26,6 @@ urllib3==2.2.3
 aiohttp==3.12.15
 python-telegram-bot>=21.4
 lxml>=4.9.3
+win11toast>=0.32 ; sys_platform == 'win32'
 streamlit
 extra_streamlit_components
