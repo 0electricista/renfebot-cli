@@ -8,8 +8,6 @@ import extra_streamlit_components as stx
 from datetime import datetime, time as dt_time, timedelta
 import streamlit.components.v1 as components
 
-# Aseguramos que Python encuentre tus módulos
-sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
 try:
     from src.scraper import Scraper
@@ -259,4 +257,5 @@ if st.session_state.get('searching'):
 
     if auto_refresh:
         time.sleep(refresh_rate)
+
         st.rerun()
