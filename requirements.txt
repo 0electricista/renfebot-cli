@@ -24,6 +24,7 @@ typing-inspection==0.4.1
 tzlocal==5.2
 urllib3==2.2.3
 aiohttp==3.12.15
-win11toast>=0.32
 python-telegram-bot>=21.4
 lxml>=4.9.3
+streamlit
+extra_streamlit_components
