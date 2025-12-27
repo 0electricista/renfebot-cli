@@ -66,6 +66,21 @@ python repeat.py
 
 ---
 
+#### 🤖 Creación bot de Telegram (opcional)
+1. Necesitas una cuenta de Telegram
+2. Entra aquí y sigue las instrucciones: https://telegram.me/BotFather. Asegúrate de copiar el token.
+3. Luego entra aquí: ```https://api.telegram.org/bot{pega_aqui_tu_token_y_quita_las_llaves}/getUpdates``` pegando tu token donde pone que lo pongas
+4. Envíale un mensaje a tu bot en Telegram, y vuelve a la página de antes (api.telegram...).
+5. Verás algo parecido a ```"message":{"message_id":X,"from":{"id":NUMEROSDEID..."```
+6. Copia el número (sin comillas) que aparezca en id ```(NUMEROSDEID)```, y ese es el CHAT_ID
+
+  
+*La versión web ya incopora un bot para todos, sin embargo, en local, debes crearlo tu y sustituir el valor del TOKEN en ```app.py``` por el tuyo*
+
+---
+
+
+
 ## 🛠️ Para Desarrolladores (CLI)
 
 Este proyecto mantiene la compatibilidad con la CLI original para su uso en scripts o servidores.

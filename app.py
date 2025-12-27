@@ -1,13 +1,13 @@
 import streamlit as st
 import json
-import os
-import sys
 import time
 import requests
+import telebot
+import threading
 import extra_streamlit_components as stx  
 from datetime import datetime, time as dt_time, timedelta
 import streamlit.components.v1 as components
-
+TOKEN = st.secrets['TELEGRAM_TOKEN']
 
 try:
     from src.scraper import Scraper
@@ -34,10 +34,33 @@ st.markdown("""
 cookie_manager = stx.CookieManager(key="renfebot_cookies")
 
 # --- 2. FUNCIONES AUXILIARES (Notificaciones / Telegram) ---
-def enviar_telegram(token, chat_id, mensaje):
-    if not token or not chat_id: return False
+@st.cache_resource
+def iniciar_bot_background():
+    bot = telebot.TeleBot(TOKEN)
+
+    @bot.message_handler(commands=['id', 'start'])
+    def send_id(message):
+        chat_id = message.chat.id
+        bot.reply_to(message, f"{chat_id}")
+
+    def loop_polling():
+        try:
+            bot.infinity_polling(timeout=10, long_polling_timeout=5)
+        except Exception as e:
+            print(f"Error en el bot: {e}")
+
+    t = threading.Thread(target=loop_polling, daemon=True)
+    t.start()
+    
+    return bot
+if 'bot_iniciado' not in st.session_state:
+    bot_instance = iniciar_bot_background()
+    st.session_state['bot_iniciado'] = True
+
+def enviar_telegram(chat_id, mensaje):
+    if not chat_id: return False
     try:
-        url = f"https://api.telegram.org/bot{token}/sendMessage"
+        url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
         requests.post(url, json={"chat_id": chat_id, "text": mensaje, "parse_mode": "HTML"}, timeout=5)
         return True
     except: return False
@@ -63,20 +86,13 @@ def get_train_id(t):
 @st.dialog("🤖 Guía de Configuración Telegram")
 def mostrar_ayuda_telegram():
     st.markdown("""
-    ### 1. Crear el Bot
-    1. Necesitas una cuenta de Telegram.
-    2. Entra aquí: **[@BotFather](https://telegram.me/BotFather)** y sigue las instrucciones (/newbot) para crear uno nuevo.
-    3. **Copia el TOKEN** que te dará al final.
-    
-    ### 2. Obtener tu Chat ID
-    1. Copia esta URL en tu navegador, reemplazando el token:
-       `https://api.telegram.org/bot{TU_TOKEN_AQUI}/getUpdates`
-       *(Quita las llaves { } al pegar el token)*.
-    2. Envía un mensaje cualquiera ("Hola") a tu nuevo bot en la app de Telegram.
-    3. Refresca la página del navegador (la del paso 1).
-    4. Busca algo parecido a:
-       `"message":{"message_id":X,"from":{"id":12345678...`
-    5. Ese número **id** (ej. 12345678) es tu **CHAT ID**.
+    Para configurar las notificaciones de Telegram:
+    1. Accede al bot [@RenfeWebMonitorBot](https://t.me/RenfeWebMonitor_bot) en Telegram.
+    2. Haz clic en "Iniciar" o envía el comando /start.
+    3. El bot te responderá con tu Chat ID.
+    4. Copia ese número y pégalo en el campo "Chat ID" de la configuración en esta aplicación.
+    5. Guarda los cambios.
+    6. Prueba la conexión para asegurarte de que todo funciona correctamente.
     """)
 
 @st.cache_data
@@ -90,7 +106,6 @@ stations_map = load_stations()
 station_names = sorted(list(stations_map.keys()))
 
 # --- 3. RECUPERAR DATOS DE COOKIES ---
-cookie_token = cookie_manager.get(cookie="tg_token")
 cookie_chat_id = cookie_manager.get(cookie="tg_chat_id")
 
 # --- 4. BARRA LATERAL ---
@@ -104,34 +119,32 @@ with st.sidebar:
     with col_help:
         # El CSS inyectado arriba hará que este botón se vea compacto
         if st.button("❔", help="¿Cómo configurar esto?"):
-            mostrar_ayuda_telegram()
-            
-    default_token = cookie_token if cookie_token else ""
+            mostrar_ayuda_telegram()        
     default_chat = cookie_chat_id if cookie_chat_id else ""
     
-    with st.expander("Configurar Credenciales", expanded=not default_token):
-        tg_token = st.text_input("Bot Token", value=default_token, type="password")
+    with st.expander("Configurar Credenciales", expanded=not default_chat):
         tg_chat_id = st.text_input("Chat ID", value=default_chat)
         
         c1, c2 = st.columns(2)
-        if c1.button("💾 Guardar token"):
-            cookie_manager.set("tg_token", tg_token, expires_at=datetime.now() + timedelta(days=30), key="set_token")
+        if c1.button("💾 Guardar Chat ID"):
             cookie_manager.set("tg_chat_id", tg_chat_id, expires_at=datetime.now() + timedelta(days=30), key="set_chat")
             st.success("Guardado.")
             time.sleep(1)
             st.rerun()
-        if c2.button("🗑️ Borrar token"):
-            cookie_manager.delete("tg_token", key="delete_token")
+        if c2.button("🗑️ Borrar Chat ID"):
             cookie_manager.delete("tg_chat_id", key="delete_chat")
             st.success("Borradas.")
             time.sleep(1) 
             st.rerun()
 
-        if st.button("🔔 Probar Conexión"):
-            if enviar_telegram(tg_token, tg_chat_id, "🔔 ¡RenfeBot conectado!"):
+        if c1.button("🔔 Probar Conexión"):
+            if enviar_telegram(tg_chat_id, "🔔 ¡RenfeBot conectado!"):
                 st.toast("Conexión correcta", icon="✅")
             else:
-                st.error("Error. Revisa Token/ID.")
+                st.error("Error. Revisa ID.")
+        if c2.button("📩 Obtener Chat ID"):
+            mostrar_ayuda_telegram()
+            
 
     st.divider()
     
@@ -217,7 +230,7 @@ if st.session_state.get('searching'):
                 st.toast(msg, icon="🎉")
                 trigger_notification("¡Novedades!", msg)
                 if tg_token and tg_chat_id:
-                    enviar_telegram(tg_token, tg_chat_id, f"🚨 <b>¡Novedades!</b> en trayecto en tu búsqueda entre {origin_name} y {dest_name} \n\n"+"\n".join(new_msgs))
+                    enviar_telegram(tg_chat_id, f"🚨 <b>¡Novedades!</b> en trayecto en tu búsqueda entre {origin_name} y {dest_name} \n\n"+"\n".join(new_msgs))
             
             st.session_state['known'] = current_ids
 
