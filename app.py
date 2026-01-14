@@ -200,7 +200,7 @@ if st.session_state.get('searching'):
     origin = StationRecord(name=origin_name, code=stations_map[origin_name])
     dest = StationRecord(name=dest_name, code=stations_map[dest_name])
     d_dt = datetime.combine(dept_date, min_time_out)
-    r_dt = datetime.combine(ret_date, dt_time(0,0)) if ret_date else None
+    r_dt = datetime.combine(ret_date, min_time_ret) if ret_date else None
     
     try:
         with st.spinner(f"Monitorizando... ({refresh_rate}s)"):
@@ -274,4 +274,5 @@ if st.session_state.get('searching'):
         time.sleep(refresh_rate)
 
         st.rerun()
+
 
