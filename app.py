@@ -171,7 +171,7 @@ with st.sidebar:
     auto_refresh = st.checkbox("🔄 Auto-Monitor", help="Refresca automáticamente la búsqueda cada cierto tiempo")
     refresh_rate = st.number_input("Segundos", 5, 60, 30) if auto_refresh else 0
     
-    if st.button("🔎 BUSCAR", type="primary", use_container_width=True):
+    if st.button("🔎 BUSCAR", type="primary", width='stretch'):
         st.session_state['searching'] = True
         st.session_state['known'] = set()
     
@@ -248,12 +248,12 @@ if st.session_state.get('searching'):
                     st.link_button(
                         "🛒 Ir a Renfe", 
                         "https://venta.renfe.com/vol/home.do", 
-                        use_container_width=True,
+                        width='stretch',
                         help="Abre venta.renfe.com en otra pestaña"
                     )
 
                 if lst: 
-                    st.dataframe([{"Salida": t.departure_time.strftime("%H:%M"), "Llegada": t.arrival_time.strftime("%H:%M"), "Precio": t.price, "Tipo": t.train_type} for t in lst], use_container_width=True)
+                    st.dataframe([{"Salida": t.departure_time.strftime("%H:%M"), "Llegada": t.arrival_time.strftime("%H:%M"), "Precio": t.price, "Tipo": t.train_type} for t in lst], width='stretch')
                 else: 
                     st.info("No disponible")
             # --------------------------------
@@ -274,5 +274,6 @@ if st.session_state.get('searching'):
         time.sleep(refresh_rate)
 
         st.rerun()
+
 
 
