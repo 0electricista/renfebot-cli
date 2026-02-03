@@ -23,10 +23,10 @@ No necesitas instalar nada en tu ordenador. Usa la versión web accesible desde 
 
 ## ✨ Características Principales
 
-* **🖥️ Interfaz Visual (Web):** Olvídate de comandos complicados. Una interfaz gráfica limpia y fácil de usar con `Streamlit`.
-* **🔔 Notificaciones Nativas (Windows):** Si usas la versión de escritorio, recibirás avisos directamente en el centro de notificaciones de Windows 10/11 (vía `win11toast`).
+* **🖥️ Interfaz Visual (Web):** Olvídate de comandos complicados. Una interfaz gráfica limpia y fácil de usar.
+* **🔔 Notificaciones Nativas (Windows):** Si usas la versión de escritorio, recibirás avisos directamente en el centro de notificaciones de Windows 10/11.
 * **⚡ Búsqueda Rápida:** Filtra trenes por hora de salida.
-* **📱 Telegram (Opcional):** Posibilidad de integración con bots de Telegram para recibir alertas en el móvil.
+* **📱 Telegram (Opcional):** Posibilidad de integración con Telegram para recibir alertas en el móvil.
 
 ---
 
