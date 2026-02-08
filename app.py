@@ -175,10 +175,12 @@ with st.sidebar:
     refresh_rate = st.number_input("Refresca la búsqueda cada (s)", 5, 60, 30) if not desactivar else 1
     
     if st.button("🔎 BUSCAR", type="primary", width='stretch'):
+        st.empty()
         st.session_state['searching'] = True
         st.session_state['first_run'] = True
         st.session_state['known'] = set()
         st.session_state["selected_trains"] = set()
+        
         st.rerun()
     
     if st.button("⏹️ PARAR"):
