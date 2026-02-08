@@ -30,3 +30,4 @@ win11toast>=0.32 ; sys_platform == 'win32'
 streamlit
 extra_streamlit_components
 pytz
+pandas

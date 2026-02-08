@@ -4,10 +4,13 @@ import time
 import requests
 import telebot
 import threading
+import math
 import extra_streamlit_components as stx  
 from datetime import datetime, time as dt_time, timedelta
 import streamlit.components.v1 as components
 import pytz 
+import pandas as pd
+from src.models import TrainRideRecord
 SPAIN_TZ = pytz.timezone('Europe/Madrid')
 TOKEN = st.secrets['TELEGRAM_TOKEN']
 
@@ -81,8 +84,8 @@ def trigger_notification(title, body):
 def request_perms():
     components.html("<script>if(Notification.permission==='default')Notification.requestPermission();</script>", height=0, width=0)
 
-def get_train_id(t):
-    return f"{t.departure_time.strftime('%H:%M')}-{t.train_type}-{t.price}"
+def get_train_id(t:TrainRideRecord):
+    return f"{t.departure_time.strftime('%H:%M')}-{t.train_type}-{t.origin}-{t.destination}"
 
 # --- DIALOGO DE AYUDA ---
 @st.dialog("🤖 Guía de Configuración Telegram")
@@ -168,12 +171,15 @@ with st.sidebar:
 
     st.divider()
     
-    auto_refresh = st.checkbox("🔄 Auto-Monitor", help="Refresca automáticamente la búsqueda cada cierto tiempo")
-    refresh_rate = st.number_input("Segundos", 5, 60, 30) if auto_refresh else 0
+    desactivar = st.checkbox("❌ Desactivar la búsqueda automática")
+    refresh_rate = st.number_input("Refresca la búsqueda cada (s)", 5, 60, 30) if not desactivar else 1
     
     if st.button("🔎 BUSCAR", type="primary", width='stretch'):
         st.session_state['searching'] = True
+        st.session_state['first_run'] = True
         st.session_state['known'] = set()
+        st.session_state["selected_trains"] = set()
+        st.rerun()
     
     if st.button("⏹️ PARAR"):
         st.session_state['searching'] = False
@@ -186,10 +192,30 @@ if not st.session_state.get('searching'):
     with st.expander("ℹ️ ¿Qué es Renfe Web Monitor?", expanded=True):
         st.markdown("""
         **Renfe Web Monitor** es un bot diseñado para ayudar a los usuarios a comprar billetes de tren de Renfe. 
-        
         Su función principal es **monitorear la disponibilidad de billetes**, especialmente útil cuando están agotados. 
         El sistema detecta automáticamente cuando alguien cancela una reserva y el billete vuelve a estar disponible, 
-        **notificándote inmediatamente** (vía navegador o Telegram) para que puedas comprarlo antes que nadie. Este bot no permite comprar billetes automáticamente, debes hacerlo tú.
+        **notificándote inmediatamente** (vía navegador o Telegram) para que puedas comprarlo antes que nadie. Este bot no permite comprar billetes automáticamente, debes hacerlo tú.  
+          
+        **IMPORTANTE**: La pestaña del navegador debe estar abierta (en móvil, debe estar en primer plano) para que el bot funcione.
+        
+        """)
+    with st.expander("🔍 Funcionalidades" , expanded=True):
+        st.markdown("""
+        1️⃣: Permite realizar búsquedas automáticas de trayectos, sin tener que recargar siempre la página.  
+        2️⃣: Permite ver los horarios de los trayectos. Además, existe la posibilidad de filtrar por trenes específicos.  
+        3️⃣: Puedes desactivar la búsqueda automática pulsando en el botón de "❌ Desactivar la búsqueda automática".
+        
+        """)
+    with st.expander("❔ Configuración bot de Telegram" , expanded=not default_chat):
+        st.markdown("""
+    Para configurar las notificaciones de Telegram:
+    1. Accede al bot [@RenfeWebMonitorBot](https://t.me/RenfeWebMonitor_bot) en Telegram.
+    2. Haz clic en "Iniciar" o envía el comando /start.
+    3. El bot te responderá con tu Chat ID.
+    4. Copia ese número y pégalo en el campo "Chat ID" de la configuración en esta aplicación.
+    5. Guarda los cambios.
+    6. Prueba la conexión para asegurarte de que todo funciona correctamente.
+        
         """)
 
 if st.session_state.get('searching'):
@@ -202,14 +228,14 @@ if st.session_state.get('searching'):
     d_dt = datetime.combine(dept_date, min_time_out)
     r_dt = datetime.combine(ret_date, min_time_ret) if ret_date else None
     
-    try:
+    try:    
         with st.spinner(f"Monitorizando... ({refresh_rate}s)"):
             all_trains = Scraper(origin, dest, d_dt, r_dt).get_trainrides()
             
         if not all_trains:
             st.warning("⚠️ Sin resultados")
         else:
-            out, ret, new_msgs, current_ids = [], [], [], set()
+            seleccionados, out, ret, new_msgs, current_ids = False, [], [], [], set()
             
             for t in all_trains:
                 if not t.available: continue
@@ -224,53 +250,126 @@ if st.session_state.get('searching'):
                 if valid:
                     current_ids.add(tid)
                     if tid not in st.session_state.get('known', set()):
-                        new_msgs.append(f"🚆 <b>{lbl}</b> {t.departure_time.strftime('%H:%M')} ({t.price}€)")
+                        if st.session_state["selected_trains"]:
+                            if tid in st.session_state["selected_trains"]:
+                                new_msgs.append(f"🚆 <b>{lbl}</b> {t.departure_time.strftime('%H:%M')} ({t.price}€)")
+                        else:
+                            new_msgs.append(f"🚆 <b>{lbl}</b> {t.departure_time.strftime('%H:%M')} ({t.price}€)")
+                            
 
             # Notificaciones
-            if new_msgs and len(st.session_state.get('known', set())) > 0:
-                msg = f"Detectados {len(new_msgs)} trenes nuevos."
-                st.toast(msg, icon="🎉")
-                trigger_notification("¡Novedades!", msg)
-                if tg_chat_id:
-                    enviar_telegram(tg_chat_id, f"🚨 <b>¡Novedades!</b> en trayecto en tu búsqueda entre {origin_name} y {dest_name} \n\n"+"\n".join(new_msgs))
+            if not st.session_state['first_run']:
+                if st.session_state.get("selected_trains",):
+                    pass
+                if new_msgs:
+                    msg = f"Detectados {len(new_msgs)} trenes nuevos."
+                    st.toast(msg, icon="🎉")
+                    trigger_notification("¡Novedades!", msg)
+                    if tg_chat_id:
+                        enviar_telegram(tg_chat_id, f"🚨 <b>¡Novedades!</b> en trayecto en tu búsqueda entre {origin_name} y {dest_name} \n\n"+"\n".join(new_msgs))
             
             st.session_state['known'] = current_ids
+            st.session_state['first_run'] = False
 
             # --- FUNCIÓN DRAW ACTUALIZADA ---
-            def draw(lst, h):
-                # Usamos columnas para poner Título a la izq y Botón a la dcha
+            def draw(lst, h, selectable):
+                # Cabecera y botón de Renfe
                 col_txt, col_btn = st.columns([0.8, 0.2])
                 with col_txt:
                     st.subheader(f"{h} ({len(lst)})")
                 with col_btn:
-                    # Un pequeño espacio y el botón
                     st.write("")
-                    st.link_button(
-                        "🛒 Ir a Renfe", 
-                        "https://venta.renfe.com/vol/home.do", 
-                        width='stretch',
-                        help="Abre venta.renfe.com en otra pestaña"
-                    )
+                    st.link_button("🛒 Ir a Renfe", "https://venta.renfe.com/vol/home.do", width='stretch')
 
                 if lst: 
-                    st.dataframe([{"Salida": t.departure_time.strftime("%H:%M"), "Llegada": t.arrival_time.strftime("%H:%M"), "Precio": t.price, "Tipo": t.train_type} for t in lst], width='stretch')
+                    # 1. Preparar datos base
+                    data = []
+                    for t in lst:
+                        tid = get_train_id(t)
+                        row = {
+                            "Salida": t.departure_time.strftime("%H:%M"), 
+                            "Llegada": t.arrival_time.strftime("%H:%M"), 
+                            "Precio": t.price, 
+                            "Tipo": t.train_type,
+                        }
+                        # Pre-marcar si ya estaba en session_state
+                        if selectable:
+                            is_checked = tid in st.session_state.get('selected_trains', set())
+                            row["Monitorizar"] = is_checked
+                            row["_id_interno"] = tid
+                        
+                        data.append(row)
+                    
+                    df = pd.DataFrame(data)
+
+                    # 2. Renderizado
+                    if selectable:
+                        # --- USO DE FORMULARIO PARA EVITAR RECARGAS CONSTANTES ---
+                        with st.form(key=f"form_{h}"):
+                            edited_df = st.data_editor(
+                                df,
+                                column_config={
+                                    "Monitorizar": st.column_config.CheckboxColumn(
+                                        "Monitorizar",
+                                        default=False,
+                                        width="small"
+                                    ),
+                                    "_id_interno": None
+                                },
+                                disabled=["Salida", "Llegada", "Precio", "Tipo"],
+                                hide_index=True,
+                                key=f"editor_{h}",
+                                width="stretch"
+                            )
+
+                            # El botón de envío dentro del form
+                            if st.form_submit_button("💾 Guardar Selección"):
+                                # Lógica de guardado masivo:
+                                
+                                # 1. Sacamos los IDs de ESTA tabla que el usuario ha dejado marcados (True)
+                                ids_seleccionados_en_tabla = set(
+                                    edited_df[edited_df["Monitorizar"] == True]["_id_interno"]
+                                )
+                                
+                                # 2. Sacamos TODOS los IDs que había en esta tabla (marcados o no)
+                                # Esto es vital para no borrar los trenes de la pestaña "Vuelta" si estamos en "Ida"
+                                ids_totales_en_tabla = set(edited_df["_id_interno"])
+
+                                # 3. Actualizamos la memoria global (Set Operations)
+                                if 'selected_trains' not in st.session_state:
+                                    st.session_state['selected_trains'] = set()
+                                
+                                # A. Quitamos de la memoria global todos los trenes que aparecen en ESTA tabla
+                                st.session_state['selected_trains'].difference_update(ids_totales_en_tabla)
+                                
+                                # B. Añadimos a la memoria global solo los que el usuario marcó en ESTA tabla
+                                st.session_state['selected_trains'].update(ids_seleccionados_en_tabla)
+                                st.success("¡Selección actualizada!")
+                    else:
+                        st.dataframe(df, width='stretch', hide_index=True)
+                        
                 else: 
-                    st.info("No disponible")
+                    st.info("No hay trenes disponibles.")
             # --------------------------------
 
-            t1, t2 = st.tabs(["IDA", "VUELTA"]) if trip_type != "Solo Ida" else (st.container(), None)
-            with t1: draw(out, "Ida")
-            if t2:
-                with t2: draw(ret, "Vuelta")
+            if trip_type != "Solo Ida":
+                t1, t2, t3 = st.tabs(["IDA", "VUELTA", "HORARIOS"])
+                with t1: draw(out, "Ida",False)
+                with t2: draw(ret, "Vuelta",False)
+                with t3: draw([t for t in all_trains if not math.isnan(t.price)], "Todos los trenes",True)
+            else:
+                t1,t2 = st.tabs(["IDA","HORARIOS"])
+                with t1: draw(out, "Ida",False)
+                with t2: draw([t for t in all_trains if not math.isnan(t.price)], "Todos los trenes",True)
             
-            if auto_refresh:
+            if not desactivar:
                 st.caption(f"Actualizado: {datetime.now(SPAIN_TZ).strftime('%H:%M:%S')}. Próxima en {refresh_rate}s.")
             else:
                 st.caption(f"Última actualización: {datetime.now(SPAIN_TZ).strftime('%H:%M:%S')}.")
 
     except Exception as e: st.error(f"Error: {e}")
 
-    if auto_refresh:
+    if not desactivar:
         time.sleep(refresh_rate)
 
         st.rerun()
