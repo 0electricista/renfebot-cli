@@ -39,6 +39,7 @@ st.markdown("""
 cookie_manager = stx.CookieManager(key="renfebot_cookies")
 
 # --- 2. FUNCIONES AUXILIARES (Notificaciones / Telegram) ---
+# --- 2. FUNCIONES AUXILIARES (Notificaciones / Telegram) ---
 @st.cache_resource
 def iniciar_bot_background():
     bot = telebot.TeleBot(TOKEN)
@@ -49,10 +50,12 @@ def iniciar_bot_background():
         bot.reply_to(message, f"{chat_id}")
 
     def loop_polling():
-        try:
-            bot.infinity_polling(timeout=10, long_polling_timeout=5)
-        except Exception as e:
-            print(f"Error en el bot: {e}")
+        while True:
+            try:
+                bot.infinity_polling(timeout=20, long_polling_timeout=20)
+            except Exception as e:
+                print(f"⚠️ Error en el bot (reintentando en 5s): {e}")
+                time.sleep(5)  
 
     t = threading.Thread(target=loop_polling, daemon=True)
     t.start()
@@ -375,6 +378,7 @@ if st.session_state.get('searching'):
         time.sleep(refresh_rate)
 
         st.rerun()
+
 
 
 
