@@ -31,3 +31,4 @@ streamlit
 extra_streamlit_components
 pytz
 pandas
+playwright>=1.40.0
