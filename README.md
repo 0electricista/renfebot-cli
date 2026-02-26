@@ -39,7 +39,7 @@ Si prefieres ejecutar el programa en tu propio ordenador para tener **notificaci
 
 ### Instalación
 
-1. Descarga el código fuente: [Descargar ZIP](https://github.com/0electricista/renfe-web-monitor/archive/refs/tags/v1.3.zip) y descomprímelo en un lugar accesible.
+1. Descarga el código fuente: [Descargar ZIP](https://github.com/0electricista/renfe-web-monitor/archive/refs/tags/v1.4.zip) y descomprímelo en un lugar accesible.
 2. Abre una terminal en la carpeta descargada y ejecuta:
 
    ```bash
