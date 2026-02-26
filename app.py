@@ -23,23 +23,22 @@ except ImportError as e:
 
 st.set_page_config(page_title="Renfe Web Monitor", page_icon="🚆", layout="wide")
 
-# --- 0. PARCHE CSS (SOLUCIÓN ESPACIADO) ---
-# Esto reduce el padding de los botones en la sidebar para que el emoji '?' no tenga espacios raros
-st.markdown("""
-<style>
-    [data-testid="stSidebar"] button {
-        padding-left: 0.5rem !important;
-        padding-right: 0.5rem !important;
-        min-width: 0 !important;
-    }
-</style>
-""", unsafe_allow_html=True)
 
 # --- 1. GESTOR DE COOKIES ---
 cookie_manager = stx.CookieManager(key="renfebot_cookies")
 
 # --- 2. FUNCIONES AUXILIARES (Notificaciones / Telegram) ---
-# --- 2. FUNCIONES AUXILIARES (Notificaciones / Telegram) ---
+def invertir():
+        st.empty()
+        st.session_state['searching'] = True
+        st.session_state['first_run'] = True
+        st.session_state['known'] = set()
+        st.session_state["selected_trains"] = set()
+        st.session_state["origin"], st.session_state["dest"] = (
+        st.session_state.get("dest"),
+        st.session_state.get("origin"),
+    )
+    
 @st.cache_resource
 def iniciar_bot_background():
     bot = telebot.TeleBot(TOKEN)
@@ -124,10 +123,7 @@ with st.sidebar:
     col_header, col_help = st.columns([0.85, 0.15])
     with col_header:
         st.subheader("🤖 Telegram (opcional)")
-    with col_help:
-        # El CSS inyectado arriba hará que este botón se vea compacto
-        if st.button("❔", help="¿Cómo configurar esto?"):
-            mostrar_ayuda_telegram()        
+       
     default_chat = cookie_chat_id if cookie_chat_id else ""
     
     with st.expander("Configurar Credenciales", expanded=not default_chat):
@@ -156,9 +152,10 @@ with st.sidebar:
 
     st.divider()
     
-    origin_name = st.selectbox("📍 Origen", station_names, index=None, placeholder="Origen")
+    origin_name = st.selectbox("📍 Origen", station_names, index=None, placeholder="Origen", key="origin")  
     dest_options = [s for s in station_names if s != origin_name]
-    dest_name = st.selectbox("🏁 Destino", dest_options, index=None, placeholder="Destino")
+    dest_name = st.selectbox("🏁 Destino", dest_options, index=None, placeholder="Destino", key="dest")
+    st.button("Invertir", on_click=invertir, width="stretch")
 
     st.divider()
 
@@ -277,7 +274,7 @@ if st.session_state.get('searching'):
             st.session_state['first_run'] = False
 
             # --- FUNCIÓN DRAW ACTUALIZADA ---
-            def draw(lst, h, selectable):
+            def draw(lst, h, selectable, mostrar_trayecto=False):
                 # Cabecera y botón de Renfe
                 col_txt, col_btn = st.columns([0.8, 0.2])
                 with col_txt:
@@ -295,8 +292,10 @@ if st.session_state.get('searching'):
                             "Salida": t.departure_time.strftime("%H:%M"), 
                             "Llegada": t.arrival_time.strftime("%H:%M"), 
                             "Precio": t.price, 
-                            "Tipo": t.train_type,
+                            "Tipo": t.train_type
                         }
+                        if mostrar_trayecto:
+                            row["Trayecto"] = "IDA" if t.origin.upper() == origin_name.upper() else "VUELTA"
                         # Pre-marcar si ya estaba en session_state
                         if selectable:
                             is_checked = tid in st.session_state.get('selected_trains', set())
@@ -311,6 +310,10 @@ if st.session_state.get('searching'):
                     if selectable:
                         # --- USO DE FORMULARIO PARA EVITAR RECARGAS CONSTANTES ---
                         with st.form(key=f"form_{h}"):
+                            disabled_cols = ["Salida", "Llegada", "Precio", "Tipo"]
+                            if mostrar_trayecto:
+                                disabled_cols.append("Trayecto")
+                            
                             edited_df = st.data_editor(
                                 df,
                                 column_config={
@@ -321,7 +324,7 @@ if st.session_state.get('searching'):
                                     ),
                                     "_id_interno": None
                                 },
-                                disabled=["Salida", "Llegada", "Precio", "Tipo"],
+                                disabled=disabled_cols,
                                 hide_index=True,
                                 key=f"editor_{h}",
                                 width="stretch"
@@ -359,13 +362,13 @@ if st.session_state.get('searching'):
 
             if trip_type != "Solo Ida":
                 t1, t2, t3 = st.tabs(["IDA", "VUELTA", "HORARIOS"])
-                with t1: draw(out, "Ida",False)
-                with t2: draw(ret, "Vuelta",False)
-                with t3: draw([t for t in all_trains if not math.isnan(t.price)], "Todos los trenes",True)
+                with t1: draw(out, "Ida", False, mostrar_trayecto=False)
+                with t2: draw(ret, "Vuelta", False, mostrar_trayecto=False)
+                with t3: draw([t for t in all_trains if not math.isnan(t.price)], "Todos los trenes", True, mostrar_trayecto=True)
             else:
                 t1,t2 = st.tabs(["IDA","HORARIOS"])
-                with t1: draw(out, "Ida",False)
-                with t2: draw([t for t in all_trains if not math.isnan(t.price)], "Todos los trenes",True)
+                with t1: draw(out, "Ida", False, mostrar_trayecto=False)
+                with t2: draw([t for t in all_trains if not math.isnan(t.price)], "Todos los trenes", True, mostrar_trayecto=True)
             
             if not desactivar:
                 st.caption(f"Actualizado: {datetime.now(SPAIN_TZ).strftime('%H:%M:%S')}. Próxima en {refresh_rate}s.")

@@ -1,3 +1,4 @@
 .toml
 .streamlit/
 src/__pycache__/
+.vscode

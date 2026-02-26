@@ -39,24 +39,24 @@ Si prefieres ejecutar el programa en tu propio ordenador para tener **notificaci
 
 ### Instalación
 
-1. Descarga el código fuente: [Descargar ZIP](https://github.com/0electricista/renfe-web-monitor/archive/refs/tags/v1.3.zip) y descomprímelo.
-2. Abre una terminal en la carpeta descargada e instala las dependencias:
+1. Descarga el código fuente: [Descargar ZIP](https://github.com/0electricista/renfe-web-monitor/archive/refs/tags/v1.3.zip) y descomprímelo en un lugar accesible.
+2. Abre una terminal en la carpeta descargada y ejecuta:
 
    ```bash
    pip install -r requirements.txt
    ```
-
+   En Windows puedes utilizar el clic derecho y darle a "Abrir en Terminal".
 ### Modos de Uso Local
 
 **Opción A: Interfaz Gráfica**  
-Ejecuta este comando para abrir la versión web en tu propio PC:
+Ejecuta este comando en la terminal para abrir la versión web en tu propio PC:
 
 ```bash
 streamlit run app.py
 ```
 
 **Opción B: Monitor de Fondo (Windows)**  
-Si quieres dejarlo corriendo en segundo plano buscando billetes repetidamente y que te avise con una notificación de Windows:
+Si quieres dejarlo corriendo en segundo plano buscando billetes repetidamente y que te avise con una notificación:
 
 ```bash
 python repeat.py
@@ -81,7 +81,7 @@ python repeat.py
 
 
 
-## 🛠️ Para Desarrolladores (CLI)
+## 🛠️ CLI Original
 
 Este proyecto mantiene la compatibilidad con la CLI original para su uso en scripts o servidores.
 
