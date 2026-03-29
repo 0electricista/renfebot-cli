@@ -1,3 +1,10 @@
+import sys
+import asyncio
+
+# Parche para evitar el NotImplementedError de Playwright en Windows con Streamlit
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+
 import streamlit as st
 import json
 import time
@@ -11,6 +18,7 @@ import streamlit.components.v1 as components
 import pytz 
 import pandas as pd
 from src.models import TrainRideRecord
+import autopay
 SPAIN_TZ = pytz.timezone('Europe/Madrid')
 TOKEN = st.secrets['TELEGRAM_TOKEN']
 
@@ -219,6 +227,38 @@ if not st.session_state.get('searching'):
     6. Prueba la conexión para asegurarte de que todo funciona correctamente.
         
         """)
+    with st.expander("Configuración de autocompra", expanded=True):
+        st.markdown("""
+        Renfe Web Monitor ahora permite realizar la autocompra de billetes mediante bonos
+        """)
+        email = st.text_input("Email Renfe")
+        password = st.text_input('Contraseña Renfe', type="password")
+        
+        # 1. El botón solo devuelve True o False
+        if st.button("Iniciar sesión", width="stretch"):
+            # 2. Cuando devuelva True, llamamos a la función
+            p, browser, contexto, page, pideOtp, exito = autopay.iniciar_sesion(email, password)
+            
+            # 3. Guardamos los resultados vivos en el st.session_state para no perderlos en la próxima recarga
+            st.session_state["playwright_session"] = {
+                "p": p, "browser": browser, "contexto": contexto, "page": page
+            }
+            st.session_state["pideOtp"] = pideOtp
+            st.session_state["exito"] = exito
+
+        # 4. Comprobamos el state (que sobrevive recargas)
+        if st.session_state.get("pideOtp"):
+            otp = st.text_input('OTP')
+            if st.button("Introducir OTP"):
+                p_session = st.session_state["playwright_session"]
+                # Cuidado: rellenar_otp necesitaría recibir el `page` vivo, no solo `p`
+                p, exito = autopay.rellenar_otp(p_session["page"], otp)
+                st.session_state["exito"] = exito
+
+        if st.session_state.get("exito"):
+            st.success("Exito")
+            
+        
 
 if st.session_state.get('searching'):
     if not origin_name or not dest_name:
