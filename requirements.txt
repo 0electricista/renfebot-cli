@@ -31,3 +31,6 @@ streamlit
 extra_streamlit_components
 pytz
 pandas
+python-dotenv
+playwright>=1.40.0
+playwright-stealth>=2.0.2

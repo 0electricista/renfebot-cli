@@ -1,4 +1,7 @@
 .toml
 .streamlit/
 src/__pycache__/
+__pycache__
 .vscode
+screenshots
+.env
