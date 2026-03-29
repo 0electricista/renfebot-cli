@@ -17,10 +17,6 @@ TOKEN = st.secrets['TELEGRAM_TOKEN']
 try:
     from src.scraper import Scraper
     from src.models import StationRecord
-    from src.browser import BrowserManager
-    from src.session import SessionManager, SessionStatus
-    from src.passenger import PassengerData, PaymentMethod, DocumentType, load_passenger, save_passenger
-    from src.purchaser import Purchaser, PurchaseStep
 except ImportError as e:
     st.error(f"Error crítico: {e}. Revisa requirements.txt.")
     st.stop()
@@ -386,110 +382,5 @@ if st.session_state.get('searching'):
 
         st.rerun()
 
-# --- 6. SECCIÓN DE AUTOCOMPRA ---
-
-st.divider()
-st.header("🛒 Autocompra de Billetes")
-st.caption("Configura tus datos y el bot comprará automáticamente cuando detecte disponibilidad.")
-
-with st.expander("👤 Datos del Pasajero", expanded=not load_passenger()):
-    saved_passenger = load_passenger()
-    
-    col_p1, col_p2 = st.columns(2)
-    p_nombre = col_p1.text_input("Nombre", value=saved_passenger.nombre if saved_passenger else "")
-    p_apellido1 = col_p2.text_input("Primer Apellido", value=saved_passenger.apellido1 if saved_passenger else "")
-    p_apellido2 = col_p1.text_input("Segundo Apellido (opcional)", value=saved_passenger.apellido2 if saved_passenger and saved_passenger.apellido2 else "")
-    
-    col_d1, col_d2 = st.columns(2)
-    p_tipo_doc = col_d1.selectbox("Tipo Documento", ["DNI", "NIE", "PASAPORTE"], index=0)
-    p_num_doc = col_d2.text_input("Nº Documento", value=saved_passenger.numero_documento if saved_passenger else "")
-    
-    col_c1, col_c2 = st.columns(2)
-    p_email = col_c1.text_input("Email", value=saved_passenger.email if saved_passenger else "")
-    p_telefono = col_c2.text_input("Teléfono (opcional)", value=saved_passenger.telefono if saved_passenger and saved_passenger.telefono else "")
-    
-    p_metodo_pago = st.radio(
-        "Método de pago",
-        ["Abono / Bono", "Tarjeta"],
-        horizontal=True,
-        index=0 if (not saved_passenger or saved_passenger.metodo_pago == PaymentMethod.ABONO) else 1,
-        help="Con abono se completa la compra automáticamente. Con tarjeta, el bot espera tu confirmación antes de pagar."
-    )
-    
-    if st.button("💾 Guardar Datos del Pasajero"):
-        try:
-            passenger = PassengerData(
-                nombre=p_nombre,
-                apellido1=p_apellido1,
-                apellido2=p_apellido2 or None,
-                tipo_documento=DocumentType(p_tipo_doc),
-                numero_documento=p_num_doc,
-                email=p_email,
-                telefono=p_telefono or None,
-                metodo_pago=PaymentMethod.ABONO if "Abono" in p_metodo_pago else PaymentMethod.TARJETA,
-            )
-            save_passenger(passenger)
-            st.success("✅ Datos guardados correctamente.")
-        except Exception as e:
-            st.error(f"Error al guardar: {e}")
-
-# --- Estado del navegador y sesión ---
-with st.expander("🌐 Navegador y Sesión de Renfe"):
-    st.markdown("""
-    El bot usa un navegador automatizado para comprar billetes. 
-    Necesitas **iniciar sesión en Renfe una sola vez** y la sesión se mantendrá.
-    """)
-    
-    col_b1, col_b2 = st.columns(2)
-    
-    if col_b1.button("🚀 Abrir Navegador y Login"):
-        with st.spinner("Abriendo navegador..."):
-            try:
-                browser = BrowserManager(headless=False)
-                browser.start()
-                st.session_state['browser'] = browser
-                
-                session = SessionManager(browser.page)
-                status = session.check_session()
-                
-                if status == SessionStatus.LOGGED_IN:
-                    user = session.get_user_info()
-                    st.success(f"✅ Sesión activa" + (f" ({user})" if user else ""))
-                else:
-                    st.warning("⏳ Inicia sesión en la ventana del navegador que se ha abierto. Tienes 5 minutos.")
-                    if session.wait_for_manual_login(timeout_seconds=300):
-                        st.success("✅ ¡Login correcto! Sesión guardada.")
-                    else:
-                        st.error("❌ No se detectó login. Inténtalo de nuevo.")
-            except Exception as e:
-                st.error(f"Error al abrir navegador: {e}")
-    
-    if col_b2.button("🔌 Cerrar Navegador"):
-        if 'browser' in st.session_state:
-            st.session_state['browser'].stop()
-            del st.session_state['browser']
-            st.success("Navegador cerrado.")
-
-# --- Activar Autocompra ---
-with st.expander("⚡ Activar Autocompra"):
-    st.markdown("""
-    Cuando la autocompra está activa, el bot intentará comprar automáticamente 
-    los trenes que hayas marcado en "Monitorizar" en cuanto estén disponibles.
-    
-    - **Con Abono**: La compra se completa automáticamente.
-    - **Con Tarjeta**: El bot te notificará por Telegram para que confirmes el pago.
-    """)
-    
-    autocompra_activa = st.toggle("Activar Autocompra", value=st.session_state.get('autocompra_activa', False))
-    st.session_state['autocompra_activa'] = autocompra_activa
-    
-    if autocompra_activa:
-        passenger = load_passenger()
-        if not passenger:
-            st.error("⚠️ Configura tus datos de pasajero primero.")
-        elif 'browser' not in st.session_state or not st.session_state['browser'].is_running():
-            st.warning("⚠️ Abre el navegador e inicia sesión primero.")
-        else:
-            st.success("✅ Autocompra activa. El bot comprará trenes monitorizados cuando estén disponibles.")
 
 
