@@ -1,22 +1,49 @@
 from playwright.sync_api import sync_playwright
 from playwright_stealth import Stealth
-
+import subprocess
 import os
-from dotenv import load_dotenv
+import subprocess
+import os
 
-load_dotenv()
-
-EMAIL = os.getenv('EMAIL')
-PASSWORD = os.getenv('PASSWORD')
 
 # === ESTRUCTURA MODIFICADA PARA MANTENER LA INSTANCIA ===
 
 def iniciar_sesion(email,password):
+        # 1. Define la ruta exacta al ejecutable de Brave según tu SO.
+    # Ejemplos comunes:
+    # Windows: r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"
+    # macOS: "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"
+    # Linux: "/usr/bin/brave-browser"
+    brave_path = r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"  # Reemplaza con tu ruta real
+
+    # 2. Define un directorio de usuario temporal o específico para el debugging.
+    # Si intentas usar el mismo perfil que tu navegación diaria mientras está abierto, fallará.
+    user_data_dir = os.path.join(os.getcwd(), "brave_debug_profile")
+
+    # 3. Configura los argumentos
+    args = [
+        brave_path,
+        "--remote-debugging-port=9222",
+        f"--user-data-dir={user_data_dir}",
+        "--no-first-run",           # Evita pantallas de bienvenida
+        "--no-default-browser-check" # Evita avisos innecesarios
+    ]
+
+    # 4. Inicia el proceso
+    try:
+        # Popen inicia el proceso sin bloquear la ejecución de tu script en Python
+        process = subprocess.Popen(args)
+        print(f"Brave iniciado correctamente. PID: {process.pid}")
+        print("El puerto CDP 9222 está ahora a la escucha.")
+    except FileNotFoundError:
+        print(f"Error crítico: No se encontró el ejecutable en la ruta '{brave_path}'. Verifica que Brave esté instalado ahí.")
+    except Exception as e:
+        print(f"Se produjo un error inesperado al lanzar el proceso: {e}")
     # En vez de usar 'with', iniciamos Playwright y lo guardamos
     p = sync_playwright().start()
     
     # Iniciamos el navegador
-    browser = p.chromium.launch(args=["--disable-blink-features=AutomationControlled"], headless=False)
+    browser = p.chromium.connect_over_cdp("http://localhost:9222")
     
     # Creamos el contexto
     contexto = browser.new_context()
@@ -36,35 +63,14 @@ def iniciar_sesion(email,password):
     page.fill('input[name="password"]', password)
     page.get_by_role('button', name='Entrar').click()
     
-    # Esperamos el OTP o fallamos
     try:
-        page.wait_for_selector('#codigoValidaLogin2F', state='visible', timeout=30000)
-        return p, browser, contexto, page, True, False
-    except Exception:
-        pass
-        
-    print("✅ Inicio de sesión terminado. El navegador sigue abierto.")
-    page.wait_for_timeout(5000)
+        # Reemplaza 'AQUÍ_EL_TEXTO' por el texto exacto que aparece, ej: 'Código de verificación' o 'Introduce tu PIN'
+        page.wait_for_selector("text=Mis viajes", state='visible', timeout=40000)
+        # O alternativa si es parte de un texto más grande: 
+        # page.locator("text=AQUÍ_EL_TEXTO").wait_for(state='visible', timeout=40000)
+    except Exception as e:
+        print(f"Error esperando el OTP/Login: {e}")
+        return p, browser, contexto, page, False
     
     # Devolvemos los objetos VIVOS para usarlos en el resto de tu código/aplicación
-    return p, browser, contexto, page, False, True
-
-def rellenar_otp(page, otp):
-        page.fill('input[name="codigoValidaLogin2F"]', otp)
-        page.locator('#idBotonValDispositivo').click()
-        page.wait_for_timeout(5000)
-        return page, True
-
-# --- Ejemplo de cómo usarlo sin que se cierre ---
-if __name__ == "__main__":
-    p_instance, navegador, contexto_vivo, pagina_viva = iniciar_sesion(EMAIL, PASSWORD)
-    
-    # Aquí puedes seguir navegando sin volver a hacer login ni OTP
-    # Usando 'pagina_viva'
-    print("Navegando a los billetes...")
-    pagina_viva.goto('https://venta.renfe.com/vol/myPassesCard.do')
-    pagina_viva.locator('.btn.btn-sm.btn-trans-purple', has_text='Nueva formalización').click()
-    
-    # Cuando TERMINES todo y ya no necesites el bot, lo cierras tú.
-    # navegador.close()
-    # p_instance.stop()
+    return p, browser, contexto, page , True

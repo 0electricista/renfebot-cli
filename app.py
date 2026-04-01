@@ -2,6 +2,8 @@ import sys
 import asyncio
 
 # Parche para evitar el NotImplementedError de Playwright en Windows con Streamlit
+# Se guarda para poder restaurarlo después de operaciones de Playwright
+_original_policy = asyncio.get_event_loop_policy()
 if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
@@ -227,39 +229,28 @@ if not st.session_state.get('searching'):
     6. Prueba la conexión para asegurarte de que todo funciona correctamente.
         
         """)
-    with st.expander("Configuración de autocompra", expanded=True):
-        st.markdown("""
-        Renfe Web Monitor ahora permite realizar la autocompra de billetes mediante bonos
-        """)
-        email = st.text_input("Email Renfe")
-        password = st.text_input('Contraseña Renfe', type="password")
-        
-        # 1. El botón solo devuelve True o False
+with st.expander("Configuración de autocompra", expanded=True):
+        st.markdown("Renfe Web Monitor ahora permite realizar la autocompra de billetes mediante bonos")
+        default_mail = cookie_manager.get("email")
+        default_password = cookie_manager.get("password") 
+        email = st.text_input("Email Renfe", value=default_mail if default_mail else "")
+        password = st.text_input('Contraseña Renfe', type="password", value=default_password if default_password else "")
         if st.button("Iniciar sesión", width="stretch"):
-            # 2. Cuando devuelva True, llamamos a la función
-            p, browser, contexto, page, pideOtp, exito = autopay.iniciar_sesion(email, password)
-            
-            # 3. Guardamos los resultados vivos en el st.session_state para no perderlos en la próxima recarga
+            if not cookie_manager.get("email"):
+                cookie_manager.set("email", email, expires_at=datetime.now(SPAIN_TZ) + timedelta(days=30), key="set_email")
+                cookie_manager.set("password", password, expires_at=datetime.now(SPAIN_TZ) + timedelta(days=30), key="set_password")
+            p, browser, contexto, page, exito = autopay.iniciar_sesion(email, password)
             st.session_state["playwright_session"] = {
                 "p": p, "browser": browser, "contexto": contexto, "page": page
             }
-            st.session_state["pideOtp"] = pideOtp
             st.session_state["exito"] = exito
 
-        # 4. Comprobamos el state (que sobrevive recargas)
-        if st.session_state.get("pideOtp"):
-            otp = st.text_input('OTP')
-            if st.button("Introducir OTP"):
-                p_session = st.session_state["playwright_session"]
-                # Cuidado: rellenar_otp necesitaría recibir el `page` vivo, no solo `p`
-                p, exito = autopay.rellenar_otp(p_session["page"], otp)
-                st.session_state["exito"] = exito
-
-        if st.session_state.get("exito"):
-            st.success("Exito")
+            if st.session_state.get("exito"):
+                st.success("Sesión iniciada correctamente. El escáner puede reanudarse.")
+            else:
+                st.error("Fallo iniciando sesión, repite el proceso")
             
         
-
 if st.session_state.get('searching'):
     if not origin_name or not dest_name:
         st.error("⚠️ Faltan estaciones")
